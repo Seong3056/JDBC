@@ -1,0 +1,78 @@
+package jdbc;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+
+public class JDBCSelect {
+
+	public static void main(String[] args) {
+		
+		String sql = "SELECT * FROM members";
+		String url = "jdbc:oracle:thin:@localhost:1521:xe";
+		String uid = "hr";
+		String upw = "hr";
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		
+		try {
+			Class.forName("oracle.jdbc.driver.OracleDriver");
+			conn = DriverManager.getConnection(url, uid, upw);
+			pstmt = conn.prepareStatement(sql);
+			
+			//SELECT문은 executeQuery()를 통해 ResultSet 객체를 받아온다.
+			//rs는 SELECT문의 쿼리 실행 결과 전체를 들고 있다.
+			rs = pstmt.executeQuery();
+			
+			/*
+			 - SELECT 쿼리문의 실행결과, 조회할 데이터가 단 한 줄이라도 존재한다면
+			   rs 객체의 next() 메서드는 true값을 리턴하면서 해당 행을 지목한다.
+			   그렇기 때문에 rs에게 데이터를 읽어올때는 반드시 next()를 먼저 호출해서
+			   데이터의 존재유무부터 물어 봐야한다.
+			   next() 메서드를 호출해야만 행하나가 지목되면서 데이터를 불러들일수 있다.
+			 */
+			
+			// 조회할 데이터 행의 갯수가 여러개 라면 반복문을 이용해서 처리하는게 좋다
+			// 만약 조회할 데이터가 한 행이라면 굳이 반복문 열필요 없이 if문으로 처리한다.
+			
+			while(rs.next()) {
+				/*
+				 - SELECT의 실행경과 컬럼을 읽어오려면
+				   rs의 getString(), getInt(), getDouble...의 메서드를 사용해서리턴받는다.
+				   (컬럼의 타입에 따라)
+				 */
+				String id = rs.getString("mem_id");
+				String pw = rs.getString("mem_pw");
+				String name = rs.getString("mem_name");
+				int age = rs.getInt("mem_age");
+				// LocalDateTime -> Timestamp: Timestamp.valueOf(LocalDateTime);
+				// Timestamp -> LocalDateTime: Timestamp.toLocalDateTime();
+				LocalDateTime regDate =  rs.getTimestamp("mem_regdate").toLocalDateTime();
+				
+					
+				System.out.printf("아이디: %s\n비밀번호: %s\n이름: %s\n나이: %d\n가입일: %s\n",id,pw,name,age,regDate);
+				System.out.println("===================================");
+			}//while
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pstmt.close();
+				conn.close();				
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+}
